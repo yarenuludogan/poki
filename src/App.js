@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import poke from './assets/poke.png';
+import { useNavigate } from 'react-router-dom';
 
 function App() {
   const [cards, setCards] = useState([]);
@@ -9,14 +10,12 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const cardsPerPage = 40;
   const [sortBy, setSortBy] = useState('name');
-
-  const API_KEY="633eb196-a28a-4265-acc0-378d1e382004";
+  const navigate= useNavigate();
+ 
 
   useEffect(() => {
     setLoading(true); 
-    axios.get('https://api.pokemontcg.io/v2/cards', {
-      headers: { 'X-Api-Key': API_KEY } 
-    })
+    axios.get('https://api.pokemontcg.io/v2/cards')
       .then(response => {
         if (response.data && response.data.data) {
           setCards(response.data.data);
@@ -29,7 +28,7 @@ function App() {
         console.error('Error while fetching data:', error);
         setLoading(false); 
       });
-  }, [API_KEY]);
+  }, []);
 
   const filteredCards = search
     ? cards.filter(card =>
@@ -82,6 +81,10 @@ function App() {
     return typeColors[type] || 'bg-gray-100'; 
   };
 
+  const handleClick = (id) => {
+    navigate(`/card/${id}`);
+  };
+
   return (
     <div className="relative min-h-screen mb-20">
       <nav className="bg-gray-800 p-4 text-white shadow-2xl flex items-center fixed top-0 left-0 right-0 z-50">
@@ -95,15 +98,16 @@ function App() {
         </div>
       </nav>
       <div className="">
-        <div className="container mx-auto p-4 mt-20 mb-12 ">
+        <div className="container mx-auto p-4 mt-20 mb-12">
+          <div className="">
           <input
             type="text"
             placeholder="Search for a card"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="mb-8 p-2 border-4 rounded-full w-full"
+            className="mb-8 mt-8 p-2 border-4 rounded-full w-full bg-gray-100 shadow-inner"
             style={{ textIndent:'20px'}} 
-          />
+          /></div>
           <div className="flex justify-end mb-4">
             <select 
               onChange={handleSortChange} 
@@ -130,27 +134,30 @@ function App() {
               </div>
             ) : currentCards.length > 0 ? (
               currentCards.map(card => (
-                <div key={card.id} className="truncate ... border border-gray-200 p-4 rounded-3xl shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform hover:scale-105">
-                  <h2 className="text-2xl font-sans font-bold pb-2 text-sky-900">{card.name}</h2>
+                <div key={card.id}
+                 className="truncate ... border border-gray-200 p-4 rounded-3xl shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform hover:scale-105"
+                 onClick={() => handleClick(card.id)}>
+                    <h2 className="text-2xl font-sans font-bold pb-2 text-sky-900">{card.name}</h2>
                   <img
+                    
                     src={`https://img.pokemondb.net/artwork/${card.name.toLowerCase()}.jpg`}
                     alt={card.name} 
-                    className="w-full items-center object-contain h-40 w-40 object-cover rounded-3xl transition-transform duration-300 ease-in-out transform hover:scale-105"
+                    className="w-full items-center object-contain h-48 w-48  rounded-3xl transition-transform duration-300 ease-in-out transform hover:scale-105"
                     onError={(e) => e.target.src = 'https://via.placeholder.com/150'}
                   />
                   
-                  <div className="">
-                    <p className="text-sky-900 text-sm font-sans truncate ..."><strong>HP:</strong> {card.hp}</p>
-                    <p className="text-sky-900 text-sm font-sans truncate ..."><strong>Attacks:</strong> {card.attacks?.map(attack => attack.name).join(', ')}</p>
-                    <p className="text-sky-900 text-sm font-sans truncate ..."><strong>Weaknesses:</strong> {card.weaknesses?.map(weakness => weakness.type).join(', ')}</p>
-                    <p className="text-sky-900 text-sm font-sans truncate ..."><strong>Set:</strong> {card.set.name}</p>
+                  <div className="object-scale-down-30">
+                    <p className="text-sky-900 text-sm font-sans truncate ..."><strong>HP</strong> {card.hp}</p>
+                    <p className="text-sky-900 text-sm font-sans truncate ..."><strong>Attacks</strong> {card.attacks?.map(attack => attack.name).join(', ')}</p>
+                    <p className="text-sky-900 text-sm font-sans truncate ..."><strong>Weaknesses</strong> {card.weaknesses?.map(weakness => weakness.type).join(', ')}</p>
+                    <p className="text-sky-900 text-sm font-sans truncate ..."><strong>Set</strong> {card.set.name}</p>
                   </div>
                   
                   <div className="absolute bottom-2 right-2 text-gray-500 rounded-2xl w-12 h-8 flex items-center justify-center sm:w-14 sm:h-6 md:w-16 md:h-8 lg:w-18 lg:h-8 xl:w-20 xl:h-8">
                     {card.types.map((type, index) => (
                       <span
                         key={index}
-                        className={`text-xs p-2 text-gray-900 drop-shadow-xl truncate rounded-2xl font-sans ${getTypeColor(type)}`} >
+                        className={`text-xs p-2 text-gray-900 drop-shadow-xl object cover rounded-2xl font-bold ${getTypeColor(type)}`} >
                         {type}
                       </span>
                     ))}
@@ -158,12 +165,12 @@ function App() {
                 </div>
               ))
             ) : (
-              <p>No cards found</p>
+              <p className="ml-4 text-xl font-bold text-sky-900">No cards found</p>
             )}
           </div>
         </div>
       </div>
-      <footer className="bg-gray-800 text-stone-100 tsxt-bold shadow-2xl fixed bottom-0 left-0 right-0 p-4 z-50">
+      <footer className="bg-gray-800 text-stone-100 shadow-2xl fixed bottom-0 left-0 right-0 p-4 z-50">
         <div className="flex justify-center">
           <div className="flex space-x-2">
             {Array.from({ length: totalPages }, (_, index) => (
